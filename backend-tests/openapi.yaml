@@ -1,0 +1,217 @@
+openapi: 3.0.3
+info:
+  title: Shady Meadows B&B API
+  description: >
+    API contract for the Shady Meadows B&B booking platform
+    (https://automationintesting.online/), covering the endpoints exercised
+    by the Karate test suite in this repository.
+  version: "1.0.0"
+servers:
+  - url: https://automationintesting.online/api
+    description: Production / demo environment
+
+tags:
+  - name: Branding
+  - name: Room
+  - name: Booking
+
+paths:
+  /branding:
+    get:
+      tags: [Branding]
+      summary: Get branding information
+      description: Returns branding details for the site, including company name, description, contact info and directions.
+      operationId: getBranding
+      responses:
+        "200":
+          description: Branding information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branding'
+              example:
+                name: "Shady Meadows B&B"
+                description: "Welcome to Shady Meadows B&B, a delightful and cozy bed and breakfast..."
+                contact:
+                  name: "Shady Meadows B&B"
+                  address: "123 Main Street, Anytown, UK"
+                  phone: "012345678901"
+                  email: "fake@fakeemail.com"
+                directions: "Easily accessible from the M5 motorway..."
+
+  /room:
+    get:
+      tags: [Room]
+      summary: List all rooms
+      description: Returns the list of available rooms and their details.
+      operationId: getRooms
+      responses:
+        "200":
+          description: A list of rooms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rooms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Room'
+              example:
+                rooms:
+                  - roomid: 1
+                    roomName: "101"
+                    type: "Single"
+                    accessible: true
+                    description: "A cozy single room"
+                    image: "https://www.thetestingworld.com/images/rooms/1.jpg"
+                    roomPrice: 100
+                    features: ["WiFi", "TV"]
+
+  /booking:
+    post:
+      tags: [Booking]
+      summary: Create a booking
+      description: Creates a new booking for a given room.
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+            example:
+              roomid: 1
+              firstname: "John"
+              lastname: "Smith"
+              depositpaid: true
+              bookingdates:
+                checkin: "2026-08-01"
+                checkout: "2026-08-04"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+              example:
+                bookingid: 42
+                roomid: 1
+                firstname: "John"
+                lastname: "Smith"
+                depositpaid: true
+                bookingdates:
+                  checkin: "2026-08-01"
+                  checkout: "2026-08-04"
+
+components:
+  schemas:
+    Contact:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+      required: [name, address, phone, email]
+
+    Branding:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Shady Meadows B&B"
+        description:
+          type: string
+        contact:
+          $ref: '#/components/schemas/Contact'
+        directions:
+          type: string
+      required: [name, description, contact, directions]
+
+    Room:
+      type: object
+      properties:
+        roomid:
+          type: integer
+        roomName:
+          type: string
+        type:
+          type: string
+        accessible:
+          type: boolean
+        description:
+          type: string
+        image:
+          type: string
+          format: uri
+        roomPrice:
+          type: number
+        features:
+          type: array
+          items:
+            type: string
+      required:
+        - roomid
+        - roomName
+        - type
+        - accessible
+        - description
+        - image
+        - roomPrice
+        - features
+
+    BookingDates:
+      type: object
+      properties:
+        checkin:
+          type: string
+          format: date
+        checkout:
+          type: string
+          format: date
+      required: [checkin, checkout]
+
+    BookingRequest:
+      type: object
+      properties:
+        roomid:
+          type: integer
+        firstname:
+          type: string
+        lastname:
+          type: string
+        depositpaid:
+          type: boolean
+        bookingdates:
+          $ref: '#/components/schemas/BookingDates'
+      required: [roomid, firstname, lastname, depositpaid, bookingdates]
+
+    Booking:
+      type: object
+      properties:
+        bookingid:
+          type: integer
+        roomid:
+          type: integer
+        firstname:
+          type: string
+        lastname:
+          type: string
+        depositpaid:
+          type: boolean
+        bookingdates:
+          $ref: '#/components/schemas/BookingDates'
+      required:
+        - bookingid
+        - roomid
+        - firstname
+        - lastname
+        - depositpaid
+        - bookingdates
