@@ -16,9 +16,4 @@ class TestRunner {
     Karate testBooking() {
         return Karate.run("classpath:booking");
     }
-
-    @Karate.Test
-    Karate runAll() {
-        return Karate.run("classpath:branding", "classpath:room", "classpath:booking");
-    }
 }
