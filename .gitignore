@@ -30,6 +30,5 @@ dist/
 .env
 
 
-CLAUDE.md
 .idea/
 .playwright-mcp/

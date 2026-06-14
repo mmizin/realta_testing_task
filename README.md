@@ -219,8 +219,6 @@ Traces (for failed tests on retry, useful in CI) are saved under `frontend-tests
 
 ---
 
-## Approach, Bugs Found & CI/CD Plan
-
 ### Approach
 
 Both suites validate the target system's contracts and core user journeys against live data rather than fixtures:
