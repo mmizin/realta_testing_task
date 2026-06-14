@@ -1,7 +1,7 @@
 function fn() {
   var env = karate.env || 'dev';
   var config = {
-    baseUrl: 'https://automationintesting.online/'
+    baseUrl: 'https://automationintesting.online/api'
   };
   return config;
 }
