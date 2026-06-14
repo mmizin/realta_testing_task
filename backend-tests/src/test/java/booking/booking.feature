@@ -20,9 +20,10 @@ Feature: Booking creation
     # with bookings from prior runs unlikely (the room response doesn't expose
     # existing bookings, so we can't check directly; the API also doesn't
     # reject overlapping bookings).
-        * def LocalDate = Java.type('java.time.LocalDate')
-        * def checkin = LocalDate.now().plusDays(Math.floor(Math.random() * 300) + 30).toString()
-        * def checkout = LocalDate.parse(checkin).plusDays(3).toString()
+        * def dateHelper = call read('classpath:utils/date-helper.js')
+        * def stayDates = dateHelper.randomFutureStayDates(30, 330, 3)
+        * def checkin = stayDates.checkin
+        * def checkout = stayDates.checkout
 
         Given path '/booking'
         And header Content-Type = 'application/json'
