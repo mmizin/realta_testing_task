@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page';
+import type { RoomData } from '../types/room';
 
 export class HomePage extends BasePage {
   readonly contactHeading: Locator;
@@ -39,30 +40,35 @@ export class HomePage extends BasePage {
     return this.roomsSection.locator('.room-card');
   }
 
-  roomCard(roomType: string): Locator {
-    return this.roomsSection
-      .locator('.room-card')
-      .filter({ has: this.page.getByRole('heading', { level: 5, name: roomType, exact: true }) });
-  }
-
   bookNowButtonIn(card: Locator): Locator {
     return card.getByRole('link', { name: 'Book now', exact: true });
   }
 
-  async getRoomPrice(roomType: string): Promise<number> {
-    const priceText = await this.roomCard(roomType).getByText(/£\d+/).innerText();
-    const match = priceText.match(/\d+/);
+  async getRoomCardsData(): Promise<RoomData[]> {
+    await this.roomCards.first().waitFor();
 
-    if (!match) {
-      throw new Error(`Could not parse price from "${priceText}"`);
-    }
+    const cards = await this.roomCards.all();
 
-    return Number(match[0]);
-  }
+    return Promise.all(
+      cards.map(async (card) => {
+        const [type, priceText, amenities] = await Promise.all([
+          card.getByRole('heading', { level: 5 }).innerText(),
+          card.getByText(/£\d+/).innerText(),
+          card.locator('.badge').allInnerTexts(),
+        ]);
 
-  async getRoomAmenities(roomType: string): Promise<string[]> {
-    const amenities = await this.roomCard(roomType).locator('.badge').allInnerTexts();
+        const priceMatch = priceText.match(/\d+/);
 
-    return amenities.map((amenity) => amenity.trim()).sort();
+        if (!priceMatch) {
+          throw new Error(`Could not parse price from "${priceText}"`);
+        }
+
+        return {
+          type: type.trim(),
+          price: Number(priceMatch[0]),
+          amenities: amenities.map((amenity) => amenity.trim()).sort(),
+        };
+      }),
+    );
   }
 }

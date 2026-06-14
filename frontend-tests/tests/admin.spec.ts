@@ -13,20 +13,18 @@ test.describe('Admin authentication & dashboard', () => {
       await pages.adminDashboard.waitForReady();
 
       await expect(pages.page).toHaveURL(/\/admin/);
-      await expect(pages.adminDashboard.logoutButton).toBeVisible();
-      await expect(pages.adminDashboard.roomsLink).toBeVisible();
-      await expect(pages.adminDashboard.messagesLink).toBeVisible();
+      await expect.soft(pages.adminDashboard.logoutButton).toBeVisible();
+      await expect.soft(pages.adminDashboard.roomsLink).toBeVisible();
+      await expect.soft(pages.adminDashboard.messagesLink).toBeVisible();
     },
   );
 
   test(
-    "a room's price and amenities in the admin Rooms tab match the homepage",
+    "every room's price and amenities in the admin Rooms tab match the homepage",
     featureTag(Tags.Regression, Tags.Admin),
     async ({ homePage, pages, appConfig }) => {
-      const roomType = 'Single';
-
-      const homePagePrice = await homePage.getRoomPrice(roomType);
-      const homePageAmenities = await homePage.getRoomAmenities(roomType);
+      const homeRooms = await homePage.getRoomCardsData();
+      expect(homeRooms.length).toBeGreaterThan(0);
 
       await pages.adminLogin.goto();
       await pages.adminLogin.waitForReady();
@@ -36,13 +34,33 @@ test.describe('Admin authentication & dashboard', () => {
       await pages.adminDashboard.waitForReady();
 
       await pages.adminDashboard.roomsLink.click();
-      await expect(pages.adminDashboard.roomRow(roomType)).toBeVisible();
 
-      const adminPrice = await pages.adminDashboard.getRoomPrice(roomType);
-      const adminAmenities = await pages.adminDashboard.getRoomAmenities(roomType);
+      const adminRooms = await pages.adminDashboard.getRoomListingsData();
 
-      expect(adminPrice).toBe(homePagePrice);
-      expect(adminAmenities).toEqual(homePageAmenities);
+      // Multiset match: each admin room must correspond to exactly one homepage
+      // card with the same type, price and amenities (duplicates included).
+      const unmatchedHomeRooms = [...homeRooms];
+      const unmatchedAdminRooms: typeof adminRooms = [];
+
+      for (const adminRoom of adminRooms) {
+        const matchIndex = unmatchedHomeRooms.findIndex(
+          (homeRoom) =>
+            homeRoom.type === adminRoom.type &&
+            homeRoom.price === adminRoom.price &&
+            JSON.stringify(homeRoom.amenities) === JSON.stringify(adminRoom.amenities),
+        );
+
+        if (matchIndex === -1) {
+          unmatchedAdminRooms.push(adminRoom);
+        } else {
+          unmatchedHomeRooms.splice(matchIndex, 1);
+        }
+      }
+
+      expect.soft(unmatchedAdminRooms, 'admin room listings with no matching homepage card').toEqual(
+        [],
+      );
+      expect.soft(unmatchedHomeRooms, 'homepage cards with no matching admin room listing').toEqual([]);
     },
   );
 });

@@ -1,5 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 import { BasePage } from './base.page';
+import type { RoomData } from '../types/room';
 
 export class AdminDashboardPage extends BasePage {
   readonly roomsLink: Locator;
@@ -26,24 +27,32 @@ export class AdminDashboardPage extends BasePage {
     await this.logoutButton.waitFor();
   }
 
-  roomRow(roomType: string): Locator {
-    return this.page
-      .locator('[data-testid="roomlisting"]')
-      .filter({ has: this.page.locator(`#type${roomType}`) });
+  get roomListings(): Locator {
+    return this.page.locator('[data-testid="roomlisting"]');
   }
 
-  async getRoomPrice(roomType: string): Promise<number> {
-    const priceText = await this.roomRow(roomType).locator('p[id^="roomPrice"]').innerText();
+  async getRoomListingsData(): Promise<RoomData[]> {
+    await this.roomListings.first().waitFor();
 
-    return Number(priceText);
-  }
+    const rows = await this.roomListings.all();
 
-  async getRoomAmenities(roomType: string): Promise<string[]> {
-    const detailsText = await this.roomRow(roomType).locator('p[id^="details"]').innerText();
+    return Promise.all(
+      rows.map(async (row) => {
+        const [type, priceText, detailsText] = await Promise.all([
+          row.locator('p[id^="type"]').innerText(),
+          row.locator('p[id^="roomPrice"]').innerText(),
+          row.locator('p[id^="details"]').innerText(),
+        ]);
 
-    return detailsText
-      .split(',')
-      .map((amenity) => amenity.trim())
-      .sort();
+        return {
+          type: type.trim(),
+          price: Number(priceText),
+          amenities: detailsText
+            .split(',')
+            .map((amenity) => amenity.trim())
+            .sort(),
+        };
+      }),
+    );
   }
 }
