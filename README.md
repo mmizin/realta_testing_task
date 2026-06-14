@@ -39,7 +39,8 @@ backend-tests/
 │   ├── booking/
 │   │   └── booking.feature         # Booking endpoint tests
 │   └── utils/
-│       └── data-validation.js      # Shared validation utilities
+│       ├── data-validation.js      # Shared validation utilities
+│       └── date-helper.js          # Shared date-generation utilities
 └── target/                          # Build output (generated)
 ```
 
@@ -97,7 +98,7 @@ Open this file in a browser to view detailed test results, execution times, and 
 
 - **Atomicity**: Each test is independent and does not rely on data from other tests
 - **Type Matchers**: Uses Karate's type matchers (`#string`, `#number`, `#array`, `#regex`) instead of hardcoding dynamic values
-- **Reusable Utilities**: Common validation logic in `data-validation.js` prevents duplication
+- **Reusable Utilities**: Common validation logic in `data-validation.js` and randomized stay-date generation in `date-helper.js` prevent duplication
 - **Data Reset**: Tests account for periodic API data resets by creating necessary test data within each test
 
 ### Configuration
